@@ -14,6 +14,11 @@ uci set system.@system[0].hostname='UZ801'
 uci set dhcp.lan.ra='disabled'
 uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ndp='disabled'
+
+# Change default LAN IP
+uci set network.lan.ipaddr='192.168.2.1'
+uci set network.lan.netmask='255.255.255.0'
+
 /sbin/wifi config
 uci set wireless.default_radio0.multicast_to_unicast='1'
 uci set wireless.default_radio0.ssid='UZ801'
