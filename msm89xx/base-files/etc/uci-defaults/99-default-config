@@ -14,6 +14,10 @@ uci set system.@system[0].hostname='OpenWRT-UZ801'
 uci set dhcp.lan.ra='disabled'
 uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ndp='disabled'
+uci set dhcp.lan.ignore='0'
+uci set dhcp.lan.start='100'
+uci set dhcp.lan.limit='150'
+uci set dhcp.lan.leasetime='5d'
 
 # Change default LAN IP
 uci set network.lan.ipaddr='192.168.2.1'
