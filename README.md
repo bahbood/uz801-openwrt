@@ -1,10 +1,5 @@
 [README на русском](https://github.com/ImMALWARE/uz801-openwrt/blob/main/README_ru.md)
 # OpenWrt for UZ801 modem
-![Image 1](https://raw.githubusercontent.com/ImMALWARE/uz801-openwrt/refs/heads/main/img/1.png)
-
-![Image 2](https://raw.githubusercontent.com/ImMALWARE/uz801-openwrt/refs/heads/main/img/2.png)
-
-![Image 3](https://raw.githubusercontent.com/ImMALWARE/uz801-openwrt/refs/heads/main/img/3.png)
 
 # Changes in fork
 I don't know how did ModemManager for the original author, but for me it was crashing the modem. So I had to fork, write my own packages to manage cellular connection and SMS, and LuCI apps for them. Scripts are based on postmarketOS wiki advices.
