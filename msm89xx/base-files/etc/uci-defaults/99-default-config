@@ -10,7 +10,7 @@ sed -i '\|/targets/msm89xx/msm8916/packages|d' /etc/apk/repositories.d/distfeeds
 /etc/init.d/wsdd2 enable
 /etc/init.d/wsdd2 start
 
-uci set system.@system[0].hostname='UZ801'
+uci set system.@system[0].hostname='OpenWRT-UZ801'
 uci set dhcp.lan.ra='disabled'
 uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ndp='disabled'
@@ -21,6 +21,6 @@ uci set network.lan.netmask='255.255.255.0'
 
 /sbin/wifi config
 uci set wireless.default_radio0.multicast_to_unicast='1'
-uci set wireless.default_radio0.ssid='UZ801'
+uci set wireless.default_radio0.ssid='OpenWRT-UZ801'
 
 uci commit
