@@ -10,7 +10,10 @@ sed -i '\|/targets/msm89xx/msm8916/packages|d' /etc/apk/repositories.d/distfeeds
 /etc/init.d/wsdd2 enable
 /etc/init.d/wsdd2 start
 
+# System
 uci set system.@system[0].hostname='OpenWRT-UZ801'
+
+# DHCP
 uci set dhcp.lan.ra='disabled'
 uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ndp='disabled'
@@ -19,12 +22,28 @@ uci set dhcp.lan.start='100'
 uci set dhcp.lan.limit='150'
 uci set dhcp.lan.leasetime='5d'
 
-# Change default LAN IP
+# Network - LAN IP
 uci set network.lan.ipaddr='192.168.2.1'
 uci set network.lan.netmask='255.255.255.0'
 
+# Firewall - keep lan open (important for USB Gadget & management)
+uci set firewall.@zone[0].input='ACCEPT'
+uci set firewall.@zone[0].output='ACCEPT'
+uci set firewall.@zone[0].forward='ACCEPT'
+
+# USB Gadget - always enable RNDIS for management access
+uci set usbgadget.usb.enabled='1'
+uci set usbgadget.rndis.enabled='1'
+# Optional: also enable serial console
+# uci set usbgadget.acm.enabled='1'
+# uci set usbgadget.acm.shell='1'
+
+# WiFi
 /sbin/wifi config
 uci set wireless.default_radio0.multicast_to_unicast='1'
 uci set wireless.default_radio0.ssid='OpenWRT-UZ801'
 
 uci commit
+
+# Enable services
+/etc/init.d/usb-gadget enable
