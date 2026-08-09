@@ -43,6 +43,19 @@ uci set usbgadget.rndis.enabled='1'
 uci set wireless.default_radio0.multicast_to_unicast='1'
 uci set wireless.default_radio0.ssid='OpenWRT-UZ801'
 
+# اطمینان از باز بودن دسترسی مدیریتی روی lan
+uci set firewall.@zone[0].input='ACCEPT'
+uci set firewall.@zone[0].output='ACCEPT'
+uci set firewall.@zone[0].forward='ACCEPT'
+
+# USB Gadget همیشه فعال
+uci set usbgadget.usb.enabled='1'
+uci set usbgadget.rndis.enabled='1'
+
+# اختیاری: فعال کردن سریال هم برای بازیابی اضطراری
+# uci set usbgadget.acm.enabled='1'
+# uci set usbgadget.acm.shell='1'
+
 uci commit
 
 # Enable services
