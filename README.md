@@ -1,7 +1,5 @@
 # OpenWrt for UZ801 modem
 
-[README на русском](README_ru.md)
-
 # Changes in this fork
 
 ModemManager crashed the modem on this device, so custom packages were written to manage cellular connection and SMS, along with corresponding LuCI apps. Scripts are based on postmarketOS wiki advice.
