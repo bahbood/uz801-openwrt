@@ -27,7 +27,7 @@ Added:
 - NFQUEUE
 - PBR
 - mailsend
-- [AmneziaWG](https://docs.amnezia.org/documentation/amnezia-wg/)
+
 - sing-box
 - SMB server
 - Kernel patch for counting RX/TX packets and bytes
