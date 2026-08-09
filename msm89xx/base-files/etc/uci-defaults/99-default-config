@@ -53,7 +53,12 @@ uci set usbgadget.rndis.enabled='1'
 # uci set usbgadget.acm.enabled='1'
 # uci set usbgadget.acm.shell='1'
 
-uci commit
+uci commit system
+uci commit dhcp
+uci commit network
+uci commit firewall
+uci commit wireless
+uci commit usbgadget
 
 # Enable services
 /etc/init.d/usb-gadget enable
