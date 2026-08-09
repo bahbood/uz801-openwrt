@@ -1,4 +1,4 @@
-[README на русском](https://github.com/ImMALWARE/uz801-openwrt/blob/main/README_ru.md)
+
 # OpenWrt for UZ801 modem
 
 # Changes in fork
