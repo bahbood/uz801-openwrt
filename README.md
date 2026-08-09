@@ -1,10 +1,13 @@
-
 # OpenWrt for UZ801 modem
 
-# Changes in fork
-I don't know how did ModemManager for the original author, but for me it was crashing the modem. So I had to fork, write my own packages to manage cellular connection and SMS, and LuCI apps for them. Scripts are based on postmarketOS wiki advices.
+[README на русском](README_ru.md)
+
+# Changes in this fork
+
+ModemManager crashed the modem on this device, so custom packages were written to manage cellular connection and SMS, along with corresponding LuCI apps. Scripts are based on postmarketOS wiki advice.
 
 Citation from postmarketOS wiki:
+
 > On my UZ801 V3.2, the process of getting a fresh pmOS image to connect to LTE was rather painful. The internet lists some misleading instructions (qmi-network script does not work out of the box here), and in other cases suggests setting sysctl keys which do not exist. This device also does not work with ModemManager, nor ofono, straight up crashing the latter. Hence, all of this has been determined through manual trial and error.
 
 `alias q='qmicli -d /dev/wwan0qmi0'`
@@ -16,117 +19,63 @@ Citation from postmarketOS wiki:
 > - `--client-no-release-cid` fails, use `--wds-follow-network` instead. This will lock up your shell, however. To disconnect, first ^C so `qmicli` sends a disconnection request to the modem, then ^Z, then `killall -9 qmicli` (otherwise it'll hang forever)
 > - `qmicli` seems to be randomly unable to receive status back from the modem. This will result in "error: operation failed: Transaction timed out". This Is Fine™
 
-sms-tool, [luci-app-3ginfo-lite](https://github.com/4IceG/luci-app-3ginfo-lite) also crashed the modem.
+sms-tool and [luci-app-3ginfo-lite](https://github.com/4IceG/luci-app-3ginfo-lite) also crashed the modem.
 
-I removed:
+## Removed
+
 - WireGuard
 - ModemManager
+- AmneziaWG
 
-Added:
+## Added / Improved
+
 - Russian language
-- NFQUEUE
-- PBR
+- NFQUEUE + PBR
 - mailsend
-
 - sing-box
-- SMB server
+- SMB server (ksmbd)
 - Kernel patch for counting RX/TX packets and bytes
+- USB Gadget (RNDIS) always enabled for reliable management access
+- Default LAN IP: `192.168.2.1`
+- Hostname: `OpenWRT-UZ801`
+- WiFi SSID: `OpenWRT-UZ801`
+- Firewall lan zone kept open (input/output/forward ACCEPT) for USB management
+- DHCP range tuned (start 100, limit 150, leasetime 5d)
+- tsens EPROBE_DEFER propagation patch
 
-Packages written from scratch:
-- zhihe-qmi + luci-proto-zhiheqmi - for connecting to cellular network. Add `modem` interface with `Zhihe/Yiming QMI` protocol.
-- modem-at-engine - ubus service to send AT commands to modem the way it doesn't crash :D
-- sms-sqlite-sync + luci-app-sms-sqlite - checks for new SMS on SIM card every 3 minutes and moves them to database. Also able to send email about new SMS. LuCI app can show and send SMS.
-- luci-app-cellular-info - information about cellular connection, signal strength, and nearby cells.
+## Packages written from scratch
 
-Unfortunately, I couldn't set up IPv6 on cellular connection :(
+- **zhihe-qmi** + **luci-proto-zhiheqmi** – cellular connection. Add `modem` interface with protocol `Zhihe/Yiming QMI`.
+- **modem-at-engine** – ubus service to send AT commands without crashing the modem.
+- **sms-sqlite-sync** + **luci-app-sms-sqlite** – checks for new SMS every 3 minutes, stores them in SQLite, optional email notification. LuCI app for viewing/sending SMS.
+- **luci-app-cellular-info** – cellular connection info, signal strength, nearby cells.
+- **uci-usb-gadget** + **luci-app-usb-gadget** – USB Gadget management (RNDIS for Ethernet-over-USB).
+
+Unfortunately, IPv6 on the cellular connection could not be set up yet.
+
+---
+
+# Default access after first boot
+
+| Item              | Value              |
+|-------------------|--------------------|
+| LAN IP            | `192.168.2.1`      |
+| Hostname          | `OpenWRT-UZ801`    |
+| WiFi SSID         | `OpenWRT-UZ801`    |
+| USB RNDIS         | Enabled by default |
+| LuCI / SSH        | Available on LAN (including USB Ethernet) |
+
+Even if WiFi hangs or the SIM/modem has problems, you can still reach the device via USB Ethernet (RNDIS).
+
+---
 
 # How to install from Linux computer
-1. Download all files from latest OpenWrt release ([releases page](https://github.com/ImMALWARE/uz801-openwrt/releases)).
-2. Enable ADB on modem by opening http://192.168.100.1/usbdebug.html
-3. Install adb and [edl tools](https://github.com/bkerler/edl) on your computer
-4. When connected to modem via USB, run `adb reboot edl` to reboot into EDL mode
-5. Make a full backup of your modem's firmware:
-```
-edl rf stock.bin
-edl rl stock --genxml
-```
-6. `cd` to folder with downloaded files from step 1 and run:
-```
-chmod +x openwrt-msm89xx-msm8916-yiming-uz801v3-flash.sh
-./openwrt-msm89xx-msm8916-yiming-uz801v3-flash.sh
-```
-7. Wait for the script to finish, then wait for modem to initialize. You should see new wired connection, and you can access LuCI at http://192.168.1.1
-8. To connect to cellular network, go to Network -> Interfaces -> Add new interface, call it `modem`, set protocol to `Zhihe/Yiming QMI`.
 
-# Set up email forwarding in sms-sqlite-sync
-1. Enable email forwarding:
-```sh
-uci set sms_sync.main.enable_email='1'
-```
-
-2. Set SMTP parameters (example for Gmail app password):
-```sh
-uci set sms_sync.main.smtp_server='smtp.gmail.com'
-uci set sms_sync.main.smtp_port='465'
-uci set sms_sync.main.smtp_user='your_email@gmail.com'
-uci set sms_sync.main.smtp_pass='your_app_password'
-uci set sms_sync.main.email_to='destination@example.com'
-uci set sms_sync.main.email_from='router@example.com'
-```
-
-3. Save config:
-```sh
-uci commit sms_sync
-```
-
-# How to update to a new version
-## Method 1: Via sysupgrade (Recommended)
-1. Download `openwrt-msm89xx-msm8916-yiming-uz801v3-squashfs-sysupgrade.bin` from the new release.
-2. In LuCI, go to System -> Backup / Flash Firmware.
-3. In the "Flash new firmware image" section, select the downloaded `.bin` file and click Flash image. If needed, enable or disable "Keep settings".
-4. Wait for flashing to complete and for the modem to reboot automatically.
-
-Alternative via SSH:
-Upload the `.bin` file to `/tmp/` on the modem and run:
-```sh
-sysupgrade -v /tmp/openwrt-msm89xx-msm8916-yiming-uz801v3-squashfs-sysupgrade.bin
-```
-
-### Method 2: Via fastboot
-1. Connect to the modem over SSH and corrupt the `boot` partition to force the modem into fastboot mode:
-	```sh
-	dd if=/dev/zero of=/dev/mmcblk0p13 bs=1M count=1
-	reboot
-	```
-	The modem will reboot with a corrupted kernel and automatically enter fastboot mode.
-
-2. Connect the modem to a Linux PC with fastboot installed, then write the new boot and system images:
-	```sh
-	fastboot flash boot openwrt-msm89xx-msm8916-yiming-uz801v3-squashfs-boot.img
-	fastboot flash rootfs openwrt-msm89xx-msm8916-yiming-uz801v3-squashfs-system.img
-	```
-
-3. If you want a full reset and to remove all user data, erase the `rootfs_data` partition. If you want to keep settings and data, skip this step:
-	```sh
-	fastboot erase rootfs_data
-	```
-
-4. Reboot the modem:
-	```sh
-	fastboot reboot
-	```
-
-5. Fix conflicts with installed packages database:
-	```sh
-	rm -f /overlay/upper/lib/apk/db/installed
-	cat /overlay/upper/etc/apk/world 2>/dev/null | grep -vE '^(kernel=|base-files=)' | cat - /rom/etc/apk/world | sort -u > /tmp/world.merged && mv /tmp/world.merged /overlay/upper/etc/apk/world
-	```
-	**REBOOT AFTER THIS!**
-	```sh
-	reboot
-	```
-
-	```sh
-	apk update
-	apk fix
-	```
+1. Download all files from the latest OpenWrt release [](https://github.com/ImMALWARE/uz801-openwrt/releases).
+2. Enable ADB on the modem by opening http://192.168.100.1/usbdebug.html
+3. Install `adb` and [edl tools](https://github.com/bkerler/edl) on your computer.
+4. When connected to the modem via USB, run `adb reboot edl` to reboot into EDL mode.
+5. Make a full backup of the original firmware:
+   ```sh
+   edl rf stock.bin
+   edl rl stock --genxml
