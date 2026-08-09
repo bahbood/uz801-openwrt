@@ -1,57 +1,97 @@
+```sh
 #!/bin/sh
 
-# We don't have eth0
+# ============================================================
+# UZ801 V3 - Default Configuration
+# ============================================================
+
+# ------------------------------------------------------------
+# Network
+# UZ801 does not have eth0
+# ------------------------------------------------------------
+
 uci del_list "network.@device[0].ports=eth0" 2>/dev/null || true
+
+# Make sure board.json uses br-lan
 sed -i 's/"device": "eth0"/"device": "br-lan"/g' /etc/board.json
 
-# Remove target-specific APK feed (msm89xx is not on downloads.openwrt.org)
-sed -i '\|/targets/msm89xx/msm8916/packages|d' /etc/apk/repositories.d/distfeeds.list 2>/dev/null || true
+# ------------------------------------------------------------
+# APK repositories
+# msm89xx is not available on downloads.openwrt.org
+# ------------------------------------------------------------
 
-/etc/init.d/wsdd2 enable
-/etc/init.d/wsdd2 start
+sed -i '|/targets/msm89xx/msm8916/packages|d' \
+    /etc/apk/repositories.d/distfeeds.list 2>/dev/null || true
 
+# ------------------------------------------------------------
 # System
+# ------------------------------------------------------------
+
 uci set system.@system[0].hostname='OpenWRT-UZ801'
 
-# DHCP
+# ------------------------------------------------------------
+# DHCP / IPv6
+# ------------------------------------------------------------
+
 uci set dhcp.lan.ra='disabled'
 uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ndp='disabled'
 uci set dhcp.lan.ignore='0'
+
 uci set dhcp.lan.start='100'
 uci set dhcp.lan.limit='150'
 uci set dhcp.lan.leasetime='5d'
 
-# Network - LAN IP
+# ------------------------------------------------------------
+# LAN
+# ------------------------------------------------------------
+
 uci set network.lan.ipaddr='192.168.2.1'
 uci set network.lan.netmask='255.255.255.0'
 
-# Firewall - keep lan open (important for USB Gadget & management)
+# ------------------------------------------------------------
+# Firewall
+#
+# LAN must always be able to access the router.
+# This is especially important for USB Gadget management.
+# WAN rules remain unchanged.
+# ------------------------------------------------------------
+
 uci set firewall.@zone[0].input='ACCEPT'
 uci set firewall.@zone[0].output='ACCEPT'
 uci set firewall.@zone[0].forward='ACCEPT'
 
-# USB Gadget - always enable RNDIS for management access
+# ------------------------------------------------------------
+# USB Gadget
+#
+# Keep USB management permanently available.
+#
+# RNDIS -> Windows compatibility
+# NCM   -> Linux/macOS compatibility
+# ACM   -> disabled for now
+# ------------------------------------------------------------
+
 uci set usbgadget.usb.enabled='1'
+
 uci set usbgadget.rndis.enabled='1'
-# Optional: also enable serial console
+uci set usbgadget.ncm.enabled='1'
+
+# Emergency serial console (disabled for now)
 # uci set usbgadget.acm.enabled='1'
 # uci set usbgadget.acm.shell='1'
 
-# WiFi
+# ------------------------------------------------------------
+# Wi-Fi
+# ------------------------------------------------------------
+
 /sbin/wifi config
+
 uci set wireless.default_radio0.multicast_to_unicast='1'
 uci set wireless.default_radio0.ssid='OpenWRT-UZ801'
 
-
-
-# USB Gadget همیشه فعال
-uci set usbgadget.usb.enabled='1'
-uci set usbgadget.rndis.enabled='1'
-
-# اختیاری: فعال کردن سریال هم برای بازیابی اضطراری
-# uci set usbgadget.acm.enabled='1'
-# uci set usbgadget.acm.shell='1'
+# ------------------------------------------------------------
+# Commit configuration
+# ------------------------------------------------------------
 
 uci commit system
 uci commit dhcp
@@ -60,5 +100,9 @@ uci commit firewall
 uci commit wireless
 uci commit usbgadget
 
-# Enable services
+# ------------------------------------------------------------
+# Enable USB Gadget at boot
+# ------------------------------------------------------------
+
 /etc/init.d/usb-gadget enable
+```
